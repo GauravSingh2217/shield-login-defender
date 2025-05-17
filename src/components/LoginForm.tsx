@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, ShieldAlert, Lock } from 'lucide-react';
-import { detectSqlInjection, logSqlInjectionAttempt } from '@/utils/sqlInjectionDetector';
+import { detectSqlInjection, logSqlInjectionAttempt, SqlInjectionSeverity } from '@/utils/sqlInjectionDetector';
 
 interface LoginFormProps {
-  onLoginAttempt: (username: string, password: string, isAttack: boolean) => void;
+  onLoginAttempt: (username: string, password: string, isAttack: boolean, severity?: SqlInjectionSeverity) => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
@@ -17,6 +17,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
   const [password, setPassword] = useState('');
   const [attackDetected, setAttackDetected] = useState(false);
   const [attackPattern, setAttackPattern] = useState('');
+  const [attackDescription, setAttackDescription] = useState('');
+  const [attackSeverity, setAttackSeverity] = useState<SqlInjectionSeverity | undefined>(undefined);
+  const [matchedText, setMatchedText] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,25 +32,64 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
     
     if (usernameCheck.detected || passwordCheck.detected) {
       // SQL injection detected
-      const detectedPattern = usernameCheck.detected 
-        ? usernameCheck.pattern 
-        : passwordCheck.pattern;
-        
+      const result = usernameCheck.detected ? usernameCheck : passwordCheck;
+      
       setAttackDetected(true);
-      setAttackPattern(detectedPattern || 'Unknown pattern');
+      setAttackPattern(result.pattern || 'Unknown pattern');
+      setAttackDescription(result.description || 'Unknown attack type');
+      setAttackSeverity(result.severity);
+      setMatchedText(result.matchedText || '');
       
       // Log the attempt
-      logSqlInjectionAttempt(username, password, detectedPattern || 'Unknown pattern');
+      logSqlInjectionAttempt(
+        username, 
+        password, 
+        result.pattern || 'Unknown pattern',
+        result.description || 'Unknown attack type',
+        result.severity || SqlInjectionSeverity.MEDIUM,
+        result.matchedText || ''
+      );
       
       // Notify parent component
-      onLoginAttempt(username, password, true);
+      onLoginAttempt(username, password, true, result.severity);
     } else {
       // No SQL injection detected
       setAttackDetected(false);
       setAttackPattern('');
+      setAttackDescription('');
+      setAttackSeverity(undefined);
+      setMatchedText('');
       
       // Notify parent component
       onLoginAttempt(username, password, false);
+    }
+  };
+
+  // Helper function to get alert styling based on severity
+  const getSeverityClass = () => {
+    switch (attackSeverity) {
+      case SqlInjectionSeverity.LOW:
+        return "border-yellow-400";
+      case SqlInjectionSeverity.MEDIUM:
+        return "border-orange-500";
+      case SqlInjectionSeverity.HIGH:
+        return "border-red-600 border-2";
+      default:
+        return "";
+    }
+  };
+
+  // Helper function to get severity display text
+  const getSeverityText = () => {
+    switch (attackSeverity) {
+      case SqlInjectionSeverity.LOW:
+        return "Low Severity";
+      case SqlInjectionSeverity.MEDIUM:
+        return "Medium Severity";
+      case SqlInjectionSeverity.HIGH:
+        return "High Severity";
+      default:
+        return "Unknown Severity";
     }
   };
 
@@ -66,14 +108,33 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             {attackDetected && (
-              <Alert variant="destructive" className="animate-pulse-red border-2">
+              <Alert 
+                variant="destructive" 
+                className={`animate-pulse-red ${getSeverityClass()}`}
+              >
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="font-bold">SQL Injection Detected!</AlertTitle>
                 <AlertDescription>
-                  <p>Malicious input pattern detected.</p>
-                  <p className="text-xs mt-1 font-mono bg-alert-100 p-1 rounded text-alert-900">
-                    Pattern: {attackPattern}
-                  </p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">{attackDescription}</span>
+                      <span className={`text-xs px-2 py-1 rounded ${attackSeverity === SqlInjectionSeverity.HIGH ? 'bg-red-600 text-white' : 
+                                        attackSeverity === SqlInjectionSeverity.MEDIUM ? 'bg-orange-500 text-white' : 
+                                        'bg-yellow-400 text-black'}`}>
+                        {getSeverityText()}
+                      </span>
+                    </div>
+                    <div className="text-xs mt-1 font-mono bg-alert-100 p-1 rounded text-alert-900">
+                      <div>
+                        <span className="font-semibold">Pattern:</span> {attackPattern}
+                      </div>
+                      {matchedText && (
+                        <div className="mt-1">
+                          <span className="font-semibold">Matched:</span> <mark className="bg-yellow-300 text-black px-1">{matchedText}</mark>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
