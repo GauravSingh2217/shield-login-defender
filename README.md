@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
 
-## Project info
+# SQL Injection Attack Detection System
 
-**URL**: https://lovable.dev/projects/b4947ca6-887a-4cdb-aca9-ad38a5620b4e
+## Project Overview
 
-## How can I edit this code?
+This web application demonstrates how SQL injection (SQLi) attacks can be detected in user input, particularly during login attempts. It uses pattern matching through regular expressions to identify common SQL injection techniques.
 
-There are several ways of editing your application.
+## What is SQL Injection?
 
-**Use Lovable**
+SQL Injection is a code injection technique that exploits vulnerabilities in applications that interact with databases. By inserting malicious SQL statements into entry fields, attackers can:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b4947ca6-887a-4cdb-aca9-ad38a5620b4e) and start prompting.
+- Bypass authentication
+- Access, modify, or delete data without authorization
+- Execute administrative operations on the database
+- In some cases, issue commands to the operating system
 
-Changes made via Lovable will be committed automatically to this repo.
+## How This Code Detects SQL Injection
 
-**Use your preferred IDE**
+The application implements detection through:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. **Pattern Matching**: Uses regular expressions to match user input against known SQL injection patterns
+2. **Real-time Monitoring**: Checks both username and password fields during login attempts
+3. **Attack Logging**: Records detected attempts with timestamp, input details, and matched pattern
+4. **User Feedback**: Provides immediate visual feedback when suspicious input is detected
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Key Features
 
-Follow these steps:
+- Interactive login form that demonstrates SQL injection detection
+- Educational information about SQL injection techniques and prevention
+- Side-by-side examples of vulnerable vs. secure code
+- Log viewer showing detected attack attempts
+- Visual alerts for security events
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Getting Started
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Installation
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. Clone the repository
+2. Install dependencies:
+```
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Running the Application
+
+```
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will run at `localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### How to Test SQL Injection Detection
 
-**Use GitHub Codespaces**
+Try these example inputs to see the detection in action:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- `' OR 1=1 --`
+- `admin' --`
+- `' UNION SELECT username, password FROM users --`
+- `'; DROP TABLE users --`
 
-## What technologies are used for this project?
+## Future Improvements
 
-This project is built with:
+- Machine learning-based detection for more sophisticated attacks
+- Integration with real database to demonstrate actual prevention techniques
+- More comprehensive pattern detection
+- Rate limiting and IP-based blocking
+- Export functionality for security logs
+- User analytics to identify suspicious behavior patterns
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Educational Purpose
 
-## How can I deploy this project?
+This application is designed for educational purposes to help understand:
+- How SQL injection attacks work
+- Methods for detecting and preventing such attacks
+- Best practices for secure coding
 
-Simply open [Lovable](https://lovable.dev/projects/b4947ca6-887a-4cdb-aca9-ad38a5620b4e) and click on Share -> Publish.
+## License
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT
