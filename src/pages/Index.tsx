@@ -111,10 +111,10 @@ const Index = () => {
               <Separator className="my-2" />
               <ol className="list-decimal pl-5 space-y-2">
                 <li>Enter a username and password in the login form.</li>
-                <li>Try using SQL injection patterns like <code className="bg-gray-100 px-1 rounded">' OR 1=1 --</code></li>
+                <li>Try using SQL injection patterns like <code className="bg-gray-100 px-1 rounded">&#39; OR 1=1 --</code></li>
                 <li>The system scans your input for SQL injection patterns.</li>
                 <li>If detected, the attack is logged and displayed in the logs section.</li>
-                <li>For regular logins, any username >2 chars and password >3 chars will succeed.</li>
+                <li>For regular logins, any username &gt;2 chars and password &gt;3 chars will succeed.</li>
               </ol>
               <p className="mt-4 text-sm text-muted-foreground">
                 <strong>Note:</strong> This is an educational tool demonstrating detection of SQL 
