@@ -16,6 +16,7 @@ const SQL_INJECTION_PATTERNS = [
   // Comment attacks
   /--.*$/,                         // -- comment
   /\/\*.*\*\//,                    // /* comment */
+  /#.*/,                           // # comment (MySQL)
   
   // UNION-based attacks
   /UNION.*SELECT/i,                // UNION SELECT
@@ -46,7 +47,92 @@ const SQL_INJECTION_PATTERNS = [
   
   // Hex/char encoding
   /0x[0-9a-f]{2,}/i,                    // Hex-encoded strings
-  /CHAR\(\d+\)/i                        // CHAR() function
+  /CHAR\(\d+\)/i,                       // CHAR() function
+  
+  // Additional patterns for more thorough detection
+  /ORDER\s+BY\s+\d+/i,                  // ORDER BY injection
+  /GROUP\s+BY\s+\d+/i,                  // GROUP BY injection
+  /HAVING\s+\d+/i,                      // HAVING injection
+  /LOAD_FILE\s*\(/i,                    // File reading attempts
+  /INTO\s+(OUT|DUMP)FILE/i,             // File writing attempts
+  /CAST\s*\(/i,                         // CAST function used in attacks
+  /CONVERT\s*\(/i,                      // CONVERT function
+  /CONCAT\s*\(/i,                       // String concatenation used in attacks
+  /CONCAT_WS\s*\(/i,                    // String concatenation with separator
+  /@@VERSION/i,                         // Database version query
+  /@@HOSTNAME/i,                        // Hostname query
+  /@@datadir/i,                         // Data directory query
+  
+  // MS-SQL specific
+  /sp_password/i,                       // MS SQL stored procedure
+  /xp_cmdshell/i,                       // MS SQL command execution
+  
+  // Oracle specific 
+  /DBMS_/i,                             // Oracle DBMS packages
+  /UTL_/i,                              // Oracle UTL packages
+  
+  // MySQL specific
+  /information_schema\.(tables|columns)/i, // Information schema access
+  /mysql\.(user|host|db)/i,             // MySQL internal tables
+  
+  // PostgreSQL specific
+  /pg_catalog\.(pg_tables|pg_class)/i,  // PostgreSQL catalog tables
+  /pg_sleep\s*\(/i,                     // PostgreSQL sleep function
+  
+  // SQLite specific
+  /sqlite_master/i,                     // SQLite schema table
+  
+  // Time-based attack patterns
+  /BENCHMARK\s*\(/i,                    // MySQL benchmark
+  /PG_SLEEP\s*\(/i,                     // PostgreSQL sleep
+  /WAITFOR\s+DELAY/i,                   // MS SQL delay
+  
+  // Boolean-based blind patterns
+  /AND\s+(SELECT|1)\s*=\s*(SELECT|1)/i, // AND boolean
+  /OR\s+(SELECT|1)\s*=\s*(SELECT|1)/i,  // OR boolean
+  
+  // Error-based patterns
+  /AND\s+EXTRACTVALUE\s*\(/i,           // MySQL error-based
+  /AND\s+UPDATEXML\s*\(/i,              // MySQL error-based
+  /AND\s+EXP\s*\(/i,                    // Oracle error-based
+  
+  // Second-order patterns
+  /SELECT.+FROM.+WHERE.+IN\s*\(\s*SELECT/i, // Subselect
+  
+  // Special characters often used in SQLi
+  /'\s*;\s*--/,                         // Closing quote with comment
+  /'\s*;\s*#/,                          // Closing quote with MySQL comment
+  
+  // Evasion techniques
+  /\/\*!.*\*\//,                        // MySQL version comment
+  /UNHEX\s*\(/i,                        // Hex decoding
+  /BASE64\s*\(/i,                       // Base64 encoding/decoding
+  /FROM_BASE64\s*\(/i,                  // Base64 decoding
+  
+  // Unicode evasion
+  /U\+[0-9A-F]{4}/i,                    // Unicode character reference
+  
+  // Case variance
+  /(?:s|%73)(?:e|%65)(?:l|%6C)(?:e|%65)(?:c|%63)(?:t|%74)/i, // SELECT with case/encoding variance
+  /(?:u|%75)(?:n|%6E)(?:i|%69)(?:o|%6F)(?:n|%6E)/i,          // UNION with case/encoding variance
+  
+  // Multi-context patterns
+  /'\s+AND\s+\d+\s*=\s*\d+\s+--/i,      // Quote AND condition comment
+  /'\s+OR\s+\d+\s*=\s*\d+\s+--/i,       // Quote OR condition comment
+  
+  // Whitespace manipulation
+  /'\s+OR\s+'\w+'\s*=\s*'\w+'/i,        // OR with excessive whitespace
+  /'\s+AND\s+'\w+'\s*=\s*'\w+'/i,       // AND with excessive whitespace
+  
+  // More sophisticated patterns
+  /CASE\s+WHEN\s+.*\s+THEN\s+.*\s+ELSE\s+.*\s+END/i, // CASE expressions
+  /IIF\s*\(/i,                          // IIF conditional function
+  /LIKE\s+BINARY\s+/i,                  // LIKE BINARY comparison
+  /SELECT\s+@@/i,                       // System variable access
+  
+  // Common boolean blind SQLi
+  /'\s+AND\s+\d+=\d+\s+--/i,            // AND boolean with comment
+  /'\s+AND\s+\d+=\d+\s+#/i              // AND boolean with MySQL comment
 ];
 
 /**
