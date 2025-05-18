@@ -2,21 +2,38 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle2, XOctagon } from 'lucide-react';
+import { SqlInjectionSeverity } from '@/utils/sqlInjectionDetector';
 
 interface LoginResponseProps {
   success: boolean;
   attackDetected: boolean;
   username: string;
+  severity?: SqlInjectionSeverity;
 }
 
 const LoginResponse: React.FC<LoginResponseProps> = ({ 
   success, 
   attackDetected, 
-  username 
+  username,
+  severity 
 }) => {
   if (attackDetected) {
+    // Get the severity class for styling
+    const getSeverityClass = () => {
+      switch (severity) {
+        case SqlInjectionSeverity.LOW:
+          return "border-yellow-400 bg-yellow-50";
+        case SqlInjectionSeverity.MEDIUM:
+          return "border-orange-500 bg-orange-50";
+        case SqlInjectionSeverity.HIGH:
+          return "border-red-600 border-2 bg-red-50";
+        default:
+          return "border-red-600";
+      }
+    };
+
     return (
-      <Alert variant="destructive" className="border-2 animate-pulse">
+      <Alert variant="destructive" className={`border-2 animate-pulse ${getSeverityClass()}`}>
         <XOctagon className="h-5 w-5" />
         <AlertTitle>Access Denied - Security Alert</AlertTitle>
         <AlertDescription className="mt-2">
@@ -25,6 +42,7 @@ const LoginResponse: React.FC<LoginResponseProps> = ({
           <div className="mt-3 bg-white/20 p-2 rounded text-sm">
             <p><strong>Technical details:</strong></p>
             <p>Input flagged for malicious SQL patterns</p>
+            {severity && <p><strong>Severity:</strong> {severity}</p>}
             <p>IP Address: 192.168.1.xxx (masked for demo)</p>
             <p>Timestamp: {new Date().toLocaleString()}</p>
           </div>
