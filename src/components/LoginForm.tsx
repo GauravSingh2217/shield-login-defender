@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, ShieldAlert, Lock } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Lock, Zap } from 'lucide-react';
 import { detectSqlInjection, logSqlInjectionAttempt, SqlInjectionSeverity } from '@/utils/sqlInjectionDetector';
 
 interface LoginFormProps {
@@ -20,6 +20,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
   const [attackDescription, setAttackDescription] = useState('');
   const [attackSeverity, setAttackSeverity] = useState<SqlInjectionSeverity | undefined>(undefined);
   const [matchedText, setMatchedText] = useState('');
+  const [encodingType, setEncodingType] = useState<string | undefined>(undefined);
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,6 +40,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
       setAttackDescription(result.description || 'Unknown attack type');
       setAttackSeverity(result.severity);
       setMatchedText(result.matchedText || '');
+      setEncodingType(result.encodingType);
       
       // Log the attempt
       logSqlInjectionAttempt(
@@ -59,6 +61,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
       setAttackDescription('');
       setAttackSeverity(undefined);
       setMatchedText('');
+      setEncodingType(undefined);
       
       // Notify parent component
       onLoginAttempt(username, password, false);
@@ -94,93 +97,102 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginAttempt }) => {
   };
 
   return (
-    <Card className="w-full max-w-md shadow-lg border-security-300">
-      <CardHeader className="space-y-1 bg-security-700 text-white rounded-t-lg">
-        <div className="flex items-center justify-center mb-2">
-          <Lock className="h-8 w-8 text-security-200" />
-        </div>
-        <CardTitle className="text-2xl text-center">Login</CardTitle>
-        <CardDescription className="text-security-100 text-center">
-          Try entering SQL injection patterns to see detection in action
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4">
-            {attackDetected && (
-              <Alert 
-                variant="destructive" 
-                className={`animate-pulse-red ${getSeverityClass()}`}
-              >
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle className="font-bold">SQL Injection Detected!</AlertTitle>
-                <AlertDescription>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">{attackDescription}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${attackSeverity === SqlInjectionSeverity.HIGH ? 'bg-red-600 text-white' : 
-                                        attackSeverity === SqlInjectionSeverity.MEDIUM ? 'bg-orange-500 text-white' : 
-                                        'bg-yellow-400 text-black'}`}>
-                        {getSeverityText()}
-                      </span>
-                    </div>
-                    <div className="text-xs mt-1 font-mono bg-alert-100 p-1 rounded text-alert-900">
-                      <div>
-                        <span className="font-semibold">Pattern:</span> {attackPattern}
-                      </div>
-                      {matchedText && (
-                        <div className="mt-1">
-                          <span className="font-semibold">Matched:</span> <mark className="bg-yellow-300 text-black px-1">{matchedText}</mark>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={attackDetected ? "border-alert-600" : ""}
-                required
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={attackDetected ? "border-alert-600" : ""}
-                required
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-security-600 hover:bg-security-700"
+    <div className="w-full max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid gap-4">
+          {attackDetected && (
+            <Alert 
+              variant="destructive" 
+              className={`animate-pulse-red ${getSeverityClass()}`}
             >
-              Sign In
-            </Button>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle className="font-bold flex items-center justify-between">
+                <span>SQL Injection Detected!</span>
+                {encodingType && (
+                  <span className="flex items-center text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                    <Zap className="h-3 w-3 mr-1" />
+                    {encodingType}
+                  </span>
+                )}
+              </AlertTitle>
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">{attackDescription}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${attackSeverity === SqlInjectionSeverity.HIGH ? 'bg-red-600 text-white' : 
+                                      attackSeverity === SqlInjectionSeverity.MEDIUM ? 'bg-orange-500 text-white' : 
+                                      'bg-yellow-400 text-black'}`}>
+                      {getSeverityText()}
+                    </span>
+                  </div>
+                  <div className="text-xs mt-1 font-mono bg-alert-100 p-2 rounded text-alert-900">
+                    <div>
+                      <span className="font-semibold">Pattern:</span> {attackPattern}
+                    </div>
+                    {matchedText && (
+                      <div className="mt-1">
+                        <span className="font-semibold">Matched:</span> 
+                        <mark className="bg-yellow-300 text-black px-1 ml-1">{matchedText}</mark>
+                      </div>
+                    )}
+                    {encodingType && (
+                      <div className="mt-1">
+                        <span className="font-semibold">Encoding:</span> 
+                        <span className="ml-1 text-blue-600">{encodingType}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="grid gap-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="Enter username or try: ' OR 1=1 --"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={attackDetected ? "border-alert-600" : ""}
+              required
+            />
           </div>
-        </form>
-      </CardContent>
-      <CardFooter className="flex-col text-sm text-muted-foreground">
-        <div className="flex items-center justify-center text-xs">
-          <ShieldAlert className="w-3 h-3 mr-1" />
-          <span>This is for educational purposes only</span>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Enter password or encoded payload"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={attackDetected ? "border-alert-600" : ""}
+              required
+            />
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Lock className="h-4 w-4 mr-2" />
+            Test Login Security
+          </Button>
         </div>
-      </CardFooter>
-    </Card>
+      </form>
+
+      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center text-xs text-gray-600 mb-2">
+          <ShieldAlert className="w-3 h-3 mr-1" />
+          <span>Enhanced Detection Active - Now supports encoded payloads</span>
+        </div>
+        <div className="text-xs text-gray-500">
+          Try URL encoded (%27), Base64, or HTML entity encoded SQL injection patterns
+        </div>
+      </div>
+    </div>
   );
 };
 
